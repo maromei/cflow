@@ -1,0 +1,19 @@
+Package: cflow
+Title: Control Flow Functions for R
+Version: 0.0.1
+Authors@R:
+    person("maro", "mei", , "maromei@proton.me", role = c("aut", "cre"))
+Description: Provides many useful functions to allow for a more strict control flow in R.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Suggests:
+    devtools,
+    knitr,
+    renv,
+    rmarkdown,
+    roxygen2,
+    usethis
+Imports: 
+    R6 (>= 2.6.1)
