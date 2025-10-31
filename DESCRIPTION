@@ -14,6 +14,8 @@ Suggests:
     renv,
     rmarkdown,
     roxygen2,
+    testthat (>= 3.0.0),
     usethis
 Imports: 
     R6 (>= 2.6.1)
+Config/testthat/edition: 3
