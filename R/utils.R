@@ -17,7 +17,7 @@ get_class_value_line_str <- function(name, value) {
 
     class_line <- paste(class(value), collapse = ", ")
 
-    value_line <- toString(value)
+    value_line <- format(value)
     if (nchar(value_line) > 0) {
         value_line <-
             value_line |>
