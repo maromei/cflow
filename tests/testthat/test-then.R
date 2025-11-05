@@ -98,5 +98,21 @@ testthat::test_that("'then' throws an error if RHS is not a function call", {
 })
 
 
+testthat::test_that("'then' throws an error if LHS is not of class 'Result'", {
+    f <- function(x) c(x, 2)
+
+    # First check that it should work with Result
+    testthat::expect_equal(
+        Ok(1) %then% f(),
+        Ok(c(1, 2))
+    )
+
+    # If LHS is not a Result, an error should be thrown.
+    testthat::expect_error(
+        1 %then% f(),
+        regexp = "'1' is not a 'cflow::Result' object"
+    )
+})
+
 #' @todo continue tests
 NULL
