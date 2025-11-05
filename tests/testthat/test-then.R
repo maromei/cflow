@@ -1,3 +1,11 @@
+#' This file should contain all tests for the behaviour of the
+#' `%then%` operator.
+#'
+#' Ideally both the `Result$then(...)` aswell as the `%then%` are tested
+#' in the same function right next to each other, to make sure the
+#' behaviour never changes for those 2 options.
+NULL
+
 library(cflow, include.only = c(Result, Ok, `%then%`))
 
 testthat::test_that("'then' pipe and function, works with Result Ok LHS", {
