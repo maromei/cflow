@@ -74,7 +74,39 @@ Result <- R6::R6Class(
 
         #' Apply a function to the contained [`Ok`] value, or leave
         #' the [`Err`] as is.
-        #' @todo continue writing docs
+        #'
+        #' @param rhs (`expression`)\cr
+        #' An expression where the wrapped [`Ok`] [`Result`] value will be
+        #' passed as the first argument to the expression.
+        #'
+        #' @return ([`Result`]).\cr
+        #' The evaluated `rhs` call wrapped in a `Result` object.
+        #' If `rhs(...)` returns a [`Result`] itself, it will not be
+        #' wrapped in another `Ok()` call. [`Results`][`Result`] will not
+        #' be nested. An [`Err`] [`Result`] will just be returned as is.
+        #'
+        #' @examples
+        #'
+        #' f <- function(x, y, z) c(x, y, z)
+        #'
+        #' Ok(1)$then(f(2, 3))
+        #' # Output: Ok(c(1, 2, 3))
+        #'
+        #' Err("Some Error Message")$then(f(2, 3))
+        #' # Output: Err("Some Error Message")
+        #'
+        #' Ok(2)$then(f(x = 1, 3))
+        #' # Output: Ok(c(1, 2, 3))
+        #'
+        #' f_err <- function(x) Err(x)
+        #' Ok(1)$then(f_err())
+        #' # Output: Err(1)
+        #'
+        #' f_ok <- function(x) Ok(x)
+        #' Ok(1)$then(f_ok())
+        #' # Output: Ok(1)
+        #'
+        #' @export
         then = function(rhs) {
             rhs <- substitute(rhs)
             cflow:::then_with_symbols(self, rhs)
