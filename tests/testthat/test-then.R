@@ -114,5 +114,26 @@ testthat::test_that("'then' throws an error if LHS is not of class 'Result'", {
     )
 })
 
-#' @todo continue tests
-NULL
+testthat::test_that("'then' respects positional arguments", {
+    f <- function(x, y, z) c(x, y, z)
+
+    testthat::expect_equal(
+        Ok(1) %then% f(2, z = 3),
+        Ok(c(1, 2, 3))
+    )
+
+    testthat::expect_equal(
+        Ok(1) %then% f(z = 3, y = 2),
+        Ok(c(1, 2, 3))
+    )
+
+    testthat::expect_equal(
+        Ok(2) %then% f(x = 1, 3),
+        Ok(c(1, 2, 3))
+    )
+
+    testthat::expect_equal(
+        Ok(2) %then% f(3, x = 1),
+        Ok(c(1, 2, 3))
+    )
+})
