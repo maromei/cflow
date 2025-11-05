@@ -44,7 +44,35 @@ testthat::test_that("'%then%' works with LHS evaluating to Result Ok", {
     testthat::expect_equal(pipe_result, expectation)
 })
 
+testthat::test_that(
+    "'%then%' returns an error if RHS does not accept any arguments",
+    {
+        f_no_args <- function() c(1, 2)
 
+        expectation <- Err("Error in f_no_args(1): unused argument (1)")
+
+        result <- Ok(1) %then% f_no_args()
+        testthat::expect_equal(result, expectation)
+
+        result <- Ok(1)$then(f_no_args())
+        testthat::expect_equal(result, expectation)
+    }
+)
+
+testthat::test_that(
+    "'%then%' returns an error if too many arguments are supplied",
+    {
+        f_single_arg <- function(a) c(a, 2)
+
+        expectation <- Err("Error in f_single_arg(1, 2): unused argument (2)")
+
+        result <- Ok(1) %then% f_single_arg(1)
+        testthat::expect_equal(result, expectation)
+
+        result <- Ok(1)$then(f_single_arg(1))
+        testthat::expect_equal(result, expectation)
+    }
+)
 
 
 #' @todo continue tests
