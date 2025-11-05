@@ -145,3 +145,17 @@ testthat::test_that("'then' respects positional arguments", {
         Ok(c(1, 2, 3))
     )
 })
+
+testthat::test_that("'then' does not nest Result objects", {
+
+    f_ok_add <- function(x, y) Ok(x + y)
+
+    testthat::expect_equal(Ok(1) %then% f_ok_add(2), Ok(3))
+    testthat::expect_equal(Ok(1)$then(f_ok_add(2)), Ok(3))
+
+    f_err_value <- function(x) Err(x, error_type = "test")
+
+    expect <- Err(1, error_type = "test")
+    testthat::expect_equal(Ok(1) %then% f_err_value(), expect)
+    testthat::expect_equal(Ok(1)$then(f_err_value()), expect)
+})
