@@ -12,6 +12,28 @@ testthat::test_that("'then' pipe and function, works with Result Ok LHS", {
     testthat::expect_equal(fun_result, expectation)
 })
 
+testthat::test_that("'then' pipe and function, works with Result Err LHS", {
+    f <- function(x, y) c(x, y)
+
+    simple_then_test <- function(result, expectation) {
+        pipe_result <- result %then% f("another")
+        fun_result <- result$then(f("another"))
+
+        testthat::expect_equal(pipe_result, expectation)
+        testthat::expect_equal(fun_result, expectation)
+    }
+
+    result <- Err("Some Error message")
+    expectation <- Err("Some Error message")
+
+    simple_then_test(result, expectation)
+
+    result <- Err("Some Error message", error_type = "some_error_type")
+    expectation <- Err("Some Error message", error_type = "some_error_type")
+
+    simple_then_test(result, expectation)
+})
+
 testthat::test_that("'%then%' works with LHS evaluating to Result Ok", {
     f <- function(x, y) c(x, y)
     lhs_func <- function() Ok(1)
@@ -21,6 +43,8 @@ testthat::test_that("'%then%' works with LHS evaluating to Result Ok", {
     expectation <- Ok(c(1, 2))
     testthat::expect_equal(pipe_result, expectation)
 })
+
+
 
 
 #' @todo continue tests
