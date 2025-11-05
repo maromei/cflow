@@ -74,6 +74,29 @@ testthat::test_that(
     }
 )
 
+testthat::test_that("'then' throws an error if RHS is not a function call", {
+    f <- function(x) c(x, 2)
+
+    # First check that it would work
+
+    input <- Ok(1)
+    expect <- Ok(c(1, 2))
+    testthat::expect_equal(input$then(f()), expect)
+    testthat::expect_equal(input %then% f(), expect)
+
+    # Then if it is not called
+
+    testthat::expect_error(
+        Ok(1)$then(f),
+        regexp = "'f' is not a function call"
+    )
+
+    testthat::expect_error(
+        Ok(1) %then% f,
+        regexp = "'f' is not a function call"
+    )
+})
+
 
 #' @todo continue tests
 NULL
