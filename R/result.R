@@ -276,3 +276,9 @@ then_with_symbols <- function(lhs, rhs) {
 toString.Result <- function(x) {
     x$get_str_repr()
 }
+
+#' @todo write docs
+#' @export
+format.Result <- function(x) {
+    x$get_str_repr()
+}
