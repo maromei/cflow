@@ -6,8 +6,6 @@
 #' behaviour never changes for those 2 options.
 NULL
 
-library(cflow, include.only = c(Result, Ok, `%then%`))
-
 testthat::test_that("'then' pipe and function, works with Result Ok LHS", {
     f <- function(x, y) c(x, y)
     result <- Ok(1)
