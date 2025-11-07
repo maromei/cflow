@@ -25,15 +25,12 @@ Result <- R6::R6Class(
     "Result",
 
     public = list(
+
         #' @description
         #' Construct a [`Result`] value.
         #' @param value (`any`).
-        #' @param is_error (`any`).
-        #' @param error_type (`any`).
-        initialize = function(value, is_error, error_type = NULL) {
+        initialize = function(value) {
             private$.value <- value
-            private$.is_error <- is_error
-            private$.error_type <- error_type
         },
 
         #' @description
@@ -44,33 +41,27 @@ Result <- R6::R6Class(
 
         #' @description
         #' Call [`stop()`] with an error message or simply return the value.
+        #'
+        #' This specific method should be implemented in [`Result.Ok`] and
+        #' [`Result.Err`].
         #' @return (`any`).
         get_or_stop = function() {
-            if (!self$is_error()) {
-                return(self$get())
-            }
-            self$get_formatted_error_message |>
+            paste(
+                "Implementation should be done by subclasses",
+                "'Result.Ok' and 'Result.Err'.",
+            ) |>
                 stop()
         },
 
         #' @description
         #' Check if the [`Result`] is an error.
         #' @return (`logical(1)`).
-        is_err = function() private$.is_error,
+        is_err = function() cflow::is.Err(self),
 
         #' @description
         #' Check if the [`Result`] is ok.
         #' @return (`logical(1)`).
-        is_ok = function() !self$is_err(),
-
-        #' @description
-        #' Treats the saved `value` as an error message, and constructs a
-        #' message to display.
-        #' @return (`character(1)`).
-        get_formatted_error_message = function() {
-            paste("Result value unwrapped to an error of type '%s':\n%s") |>
-                sprintf(toString(self$error_type), self$get())
-        },
+        is_ok = function() cflow::is.Ok(self),
 
         #' Apply a function to the contained [`Ok`] value, or leave
         #' the [`Err`] as is.
@@ -108,18 +99,93 @@ Result <- R6::R6Class(
         #'
         #' @export
         then = function(rhs) {
+            .env <- parent.frame(n = 1)
             rhs <- substitute(rhs)
-            cflow:::then_with_symbols(self, rhs)
+            cflow:::then_with_symbols(self, rhs, .env)
         },
 
+        #' @todo doc
         get_str_repr = function() {
-            state_str <- "Ok"
-            if (self$is_err()) {
-                state_str <- "Err"
-            }
+            paste(
+                "Implementation should be done by subclasses",
+                "'Result.Ok' and 'Result.Err'.",
+            ) |>
+                stop()
+        },
 
+        #' @todo doc
+        print = function(...) {
+            cat(self$get_str_repr())
+        }
+    ),
+    private = list(
+        # @field .value (`any`)\cr
+        # Internal / private representation of the value.
+        .value = NULL
+    )
+)
+
+#' @todo write docs
+#' @todo tests
+#' @export
+Result.Ok <- R6::R6Class(
+    "Ok",
+    inherit = Result,
+    public = list(
+        #' @description
+        #' Returns the value.
+        #' @return (`any`).
+        get_or_stop = function() sefl$get(),
+
+        #' @todo test
+        #' @todo doc
+        get_str_repr = function() {
+            value_line <- cflow:::get_class_value_line_str("Value", self$get())
+            sprintf("Result: Ok\n%s\n", value_line)
+        }
+    )
+)
+
+#' @todo write docs
+#' @todo tests
+#' @export
+Result.Err <- R6::R6Class(
+    "Err",
+    inherit = Result,
+    public = list(
+
+        #' @description
+        #' Construct a [`Result`] value.
+        #' @param value (`any`).
+        #' @param is_error (`any`).
+        #' @param error_type (`any`).
+        initialize = function(value, error_type = NULL) {
+            private$.value <- value
+            private$.error_type <- error_type
+        },
+
+        #' @description
+        #' Calls [`stop()`] with an error message.
+        #' @return (`any`).
+        get_or_stop = function() {
+            self$get_formatted_error_message |>
+                stop()
+        },
+
+        #' @description
+        #' Treats the saved `value` as an error message, and constructs a
+        #' message to display.
+        #' @return (`character(1)`).
+        get_formatted_error_message = function() {
+            paste("Result value unwrapped to an error of type '%s':\n%s") |>
+                sprintf(toString(self$error_type), self$get())
+        },
+
+        #' @todo test
+        #' @todo doc
+        get_str_repr = function() {
             value_line <- cflow:::get_class_value_line_str(
-                "Value",
+                "Message",
                 self$get()
             )
             error_type_line <- cflow:::get_class_value_line_str(
@@ -128,15 +194,10 @@ Result <- R6::R6Class(
             )
 
             sprintf(
-                "Result: %s\n%s\n%s\n",
-                state_str,
+                "Result: Err\n%s\n%s\n",
                 value_line,
                 error_type_line
             )
-        },
-
-        print = function(...) {
-            cat(self$get_str_repr())
         }
     ),
     active = list(
@@ -144,17 +205,6 @@ Result <- R6::R6Class(
         error_type = function() private$.error_type
     ),
     private = list(
-        # @field .value (`any`)\cr
-        # Internal / private representation of the value.
-        .value = NULL,
-
-        # @field .is_error (`any`)\cr
-        # Internal / private representation of whether the object represents an
-        # error. Should be set on initialization. There is no other way to
-        # detect whether an error is saved, other than checking for an
-        # `.error_type`. However, that may be [`NULL`].
-        .is_error = NULL,
-
         # @field .error_type (`any`)\cr
         # Internal / private representation of the error type.
         # It may be [NULL] and does not need to be specified.
@@ -162,20 +212,17 @@ Result <- R6::R6Class(
     )
 )
 
-#' Construct an `Ok` [`Result`] value.
+#' Construct a [`Result.Ok`] value.
 #'
 #' @param ok_value (`any`).
-#' @return ([`Result`]).
+#' @return ([`Result.Ok`]).
 #'
 #' @export
 Ok <- function(ok_value) {
-    cflow::Result$new(
-        value = ok_value,
-        is_error = FALSE
-    )
+    cflow::Result.Ok$new(value = ok_value)
 }
 
-#' Construct an `Err` [`Result`] value.
+#' Construct an [`Result.Err`] value.
 #'
 #' @param error_value (`any`).
 #' @param error_type (`any`).
@@ -183,9 +230,8 @@ Ok <- function(ok_value) {
 #'
 #' @export
 Err <- function(error_value, error_type = NULL) {
-    cflow::Result$new(
+    cflow::Result.Err$new(
         value = error_value,
-        is_error = TRUE,
         error_type = error_type
     )
 }
@@ -194,13 +240,48 @@ Err <- function(error_value, error_type = NULL) {
 #' @param x (`any`)\cr
 #' Object to check.
 #' @return (`logical(1)`).
+#' @todo adjsut to work with inheritance
 #' @export
 is.Result <- function(x) {
-    R6::is.R6(x) && class(x)[1] == cflow::Result$classname
+    R6::is.R6(x) && inherits(x, cflow::Result$classname)
 }
 
 #' @todo write docs
-then_with_symbols <- function(lhs, rhs) {
+#' @todo tests
+#' @export
+is.Ok <- function(x) {
+    class_ <- class(x)
+    expected_class <- c(
+        cflow::Result.Ok$classname,
+        cflow::Result$classname,
+        "R6"
+    )
+    if (length(class_) != length(expected_class)) {
+        return(FALSE)
+    }
+
+    all(class_ == expected_class)
+}
+
+#' @todo write docs
+#' @todo tests
+#' @export
+is.Err <- function(x) {
+    class_ <- class(x)
+    expected_class <- c(
+        cflow::Result.Err$classname,
+        cflow::Result$classname,
+        "R6"
+    )
+    if (length(class_) != length(expected_class)) {
+        return(FALSE)
+    }
+
+    all(class_ == expected_class)
+}
+
+#' @todo write docs
+then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
     if (!cflow::is.Result(lhs)) {
         stop(sprintf("'%s' is not a 'cflow::Result' object.", toString(lhs)))
     }
@@ -233,7 +314,7 @@ then_with_symbols <- function(lhs, rhs) {
     rhs <- as.call(rhs_list)
 
     evaluated_call <- tryCatch(
-        eval(rhs),
+        eval(rhs, envir = .env),
         error = function(e) cflow::Err(toString(e))
     )
 
@@ -252,14 +333,17 @@ then_with_symbols <- function(lhs, rhs) {
 }
 
 #' @todo write docs
+#' @todo test that it applies to Result.Ok and Result.Err
 #' @export
 `%then%` <- function(lhs, rhs) {
+    .env <- parent.frame(n = 1)
     rhs <- substitute(rhs)
-    cflow:::then_with_symbols(lhs, rhs)
+    cflow:::then_with_symbols(lhs, rhs, .env)
 }
 
 #' @todo write docs
 #' @todo tests
+#' @todo test that it applies to Result.Ok and Result.Err
 #' @export
 `==.Result` <- function(lhs, rhs) {
     lhs_str <- lhs$get_str_repr()
@@ -272,12 +356,14 @@ then_with_symbols <- function(lhs, rhs) {
 #' @todo test
 #' @todo test, that it can be used with library(include.only=c("Ok", "Err"))
 #'  (It works, but there should be an explicit test case for it)
+#' @todo test that it applies to Result.Ok and Result.Err
 #' @export
 toString.Result <- function(x) {
     x$get_str_repr()
 }
 
 #' @todo write docs
+#' @todo test that it applies to Result.Ok and Result.Err
 #' @export
 format.Result <- function(x) {
     x$get_str_repr()
