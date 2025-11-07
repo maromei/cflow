@@ -1,16 +1,20 @@
 #' Result - Control Flow constrcut for a Value or Error
 #'
 #' @description
-#' The idea is to bring a control flow construct used in the `Rust` programming
+#' `Result` brings a control flow construct used in the `Rust` programming
 #' language to R. The idea is to not always call [`stop()`] if an error occurs,
 #' or return a magic number indicating the special error state, but instead
 #' signal it via this class.
 #'
 #' To construct a [`Result`] object, use the [`Ok`] and [`Err`] functions,
-#' as these handle the creation of the Object without producing an inconsistent
-#' internal state. The [`Result`] class is still exported by this packages,
-#' since it is a central piece of functionality, but technically it should
-#' never be required to call / modify it directory.
+#' as these handle the creation of the [`Result.Ok`] and [`Result.Err`]
+#' Objects without producing an inconsistent
+#' internal state. Generally, the [`Result`] class should not
+#' be used directly. The important implementations are found in the
+#' [`Result.Ok`] and [`Result.Err`] subclasses. Though not enforeced on a
+#' language level, this class should be thought of as a virtual one.
+#' It is still exported by this packages,
+#' since it is a central piece of functionality.
 #'
 #' @examples
 #'
@@ -42,8 +46,9 @@ Result <- R6::R6Class(
         #' @description
         #' Call [`stop()`] with an error message or simply return the value.
         #'
-        #' This specific method should be implemented in [`Result.Ok`] and
-        #' [`Result.Err`].
+        #' Calling this function on the base [`Result`] class will cause
+        #' an error. The method should be implemented in [`Result.Ok`] and
+        #' [`Result.Err`] sub-classes.
         #' @return (`any`).
         get_or_stop = function() {
             paste(
@@ -55,14 +60,17 @@ Result <- R6::R6Class(
 
         #' @description
         #' Check if the [`Result`] is an error.
+        #' See also [`is.Err()`].
         #' @return (`logical(1)`).
         is_err = function() cflow::is.Err(self),
 
         #' @description
         #' Check if the [`Result`] is ok.
+        #' See also [`is.Ok()`].
         #' @return (`logical(1)`).
         is_ok = function() cflow::is.Ok(self),
 
+        #' @description
         #' Apply a function to the contained [`Ok`] value, or leave
         #' the [`Err`] as is.
         #'
@@ -96,15 +104,17 @@ Result <- R6::R6Class(
         #' f_ok <- function(x) Ok(x)
         #' Ok(1)$then(f_ok())
         #' # Output: Ok(1)
-        #'
-        #' @export
         then = function(rhs) {
             .env <- parent.frame(n = 1)
             rhs <- substitute(rhs)
             cflow:::then_with_symbols(self, rhs, .env)
         },
 
-        #' @todo doc
+        #' @description
+        #' Produce a string representation of the [`Result`] object.
+        #'
+        #' Calling this function will result in an error, as the sub-classes
+        #' are supposed to implement it.
         get_str_repr = function() {
             paste(
                 "Implementation should be done by subclasses",
@@ -113,7 +123,11 @@ Result <- R6::R6Class(
                 stop()
         },
 
-        #' @todo doc
+        #' @description
+        #' Print the [`Result`] objects string representation
+        #'
+        #' @param ... Unused additional parameters required to define the
+        #' `print()` function in an `R6` class.
         print = function(...) {
             cat(self$get_str_repr())
         }
@@ -125,8 +139,34 @@ Result <- R6::R6Class(
     )
 )
 
-#' @todo write docs
-#' @todo tests
+#' Result.Ok - Signal the successfull capture of a variable
+#'
+#' @description
+#' This `R6` class represents the 'success' portion of the
+#' [`Result`] control flow construct.
+#'
+#' Internally it just saves a single value, and provides some methods
+#' for pretty printing the construct around it.
+#'
+#' While instances of this class could be created via `Result.Ok::new(...)`,
+#' the recommendation is to use [`Ok()`] instead, as it has a cleaner interface.
+#'
+#' @examples
+#'
+#' # Constructs a simple Ok value
+#' Ok(1)
+#'
+#' # The 'then' method (and the '%then%' operator) can be used
+#' # to pipe the wrapped Ok value to another function, whose output
+#' # will also be wrapped.
+#'
+#' f <- function(x, y) c(x, y)
+#' Ok(1)$then(f(2))
+#' # Output: Ok(c(1, 2))
+#' Ok(1) %then% f(2)
+#' # Output: Ok(c(1, 2))
+#'
+#' @name Result.Ok
 #' @export
 Result.Ok <- R6::R6Class(
     "Ok",
@@ -134,11 +174,16 @@ Result.Ok <- R6::R6Class(
     public = list(
         #' @description
         #' Returns the value.
+        #'
+        #' Overriding the base class [`Result$get_or_stop()`][`Result`]
+        #' method for simplicity.
         #' @return (`any`).
         get_or_stop = function() sefl$get(),
 
-        #' @todo test
-        #' @todo doc
+        #' @description
+        #' Produce a string representation of the [`Result.Ok`] object.
+        #'
+        #' @return (`character(1)`).
         get_str_repr = function() {
             value_line <- cflow:::get_class_value_line_str("Value", self$get())
             sprintf("Result: Ok\n%s\n", value_line)
@@ -146,8 +191,36 @@ Result.Ok <- R6::R6Class(
     )
 )
 
-#' @todo write docs
-#' @todo tests
+#' Result.Err - Signal the unsuccessfull capture of a variable
+#'
+#' @description
+#' This `R6` class represents the 'failure' portion of the
+#' [`Result`] control flow construct.
+#'
+#' Internally an error message is saved, with an optional error type,
+#' to differentiate different sources of errors.
+#'
+#' While instances of this class could be created via `Result.Err::new(...)`,
+#' the recommendation is to use [`Err()`] instead,
+#' as it has a cleaner interface.
+#'
+#' @examples
+#'
+#' # Constructs a simple Err value
+#' Err("Some Error Message", "Some optional Error Type")
+#'
+#' # The 'then' method (and the '%then%' operator) can be used
+#' # to pipe a Result object to another function. In contrast to an
+#' # Ok type, the error type will be returned as is, without evaluation of
+#' # the function.
+#'
+#' f <- function(x, y) c(x, y)
+#' Err("error")$then(f(2))
+#' # Output: Err("error")
+#' Err("error") %then% f(2)
+#' # Output: Err("error")
+#'
+#' @name Result.Err
 #' @export
 Result.Err <- R6::R6Class(
     "Err",
@@ -156,9 +229,11 @@ Result.Err <- R6::R6Class(
 
         #' @description
         #' Construct a [`Result`] value.
-        #' @param value (`any`).
-        #' @param is_error (`any`).
-        #' @param error_type (`any`).
+        #' @param value (`any`).\cr
+        #' Will be used as the error message here.
+        #' @param error_type (`any`).\cr
+        #' Some object representing the type of an error.
+        #' Can be `NULL`.
         initialize = function(value, error_type = NULL) {
             private$.value <- value
             private$.error_type <- error_type
@@ -166,6 +241,9 @@ Result.Err <- R6::R6Class(
 
         #' @description
         #' Calls [`stop()`] with an error message.
+        #'
+        #' Overriding the base class [`Result$get_or_stop()`][`Result`]
+        #' method for simplicity.
         #' @return (`any`).
         get_or_stop = function() {
             self$get_formatted_error_message |>
@@ -175,14 +253,17 @@ Result.Err <- R6::R6Class(
         #' @description
         #' Treats the saved `value` as an error message, and constructs a
         #' message to display.
+        #'
         #' @return (`character(1)`).
         get_formatted_error_message = function() {
             paste("Result value unwrapped to an error of type '%s':\n%s") |>
                 sprintf(toString(self$error_type), self$get())
         },
 
-        #' @todo test
-        #' @todo doc
+        #' @description
+        #' Produce a string representation of the [`Result.Ok`] object.
+        #'
+        #' @return (`character(1)`).
         get_str_repr = function() {
             value_line <- cflow:::get_class_value_line_str(
                 "Message",
@@ -214,7 +295,10 @@ Result.Err <- R6::R6Class(
 
 #' Construct a [`Result.Ok`] value.
 #'
-#' @param ok_value (`any`).
+#' See [`Result.Ok`] for more detail.
+#'
+#' @param ok_value (`any`).\cr
+#' Value to wrap.
 #' @return ([`Result.Ok`]).
 #'
 #' @export
@@ -224,9 +308,13 @@ Ok <- function(ok_value) {
 
 #' Construct an [`Result.Err`] value.
 #'
-#' @param error_value (`any`).
-#' @param error_type (`any`).
-#' @return ([`Result`]).
+#' See [`Result.Err`] for more detail.
+#'
+#' @param error_value (`any`).\cr
+#' Error message to wrap.
+#' @param error_type (`any`).\cr
+#' Optional error type
+#' @return ([`Result.Err`]).
 #'
 #' @export
 Err <- function(error_value, error_type = NULL) {
@@ -240,14 +328,21 @@ Err <- function(error_value, error_type = NULL) {
 #' @param x (`any`)\cr
 #' Object to check.
 #' @return (`logical(1)`).
-#' @todo adjsut to work with inheritance
+#'
+#' @name is.Result
 #' @export
 is.Result <- function(x) {
     R6::is.R6(x) && inherits(x, cflow::Result$classname)
 }
 
-#' @todo write docs
-#' @todo tests
+#' Is the value a [`Result.Ok`] object?
+#'
+#' @param x (`any`)\cr
+#' Object to check.
+#'
+#' @return (`logical(1)`)
+#'
+#' @name is.Ok
 #' @export
 is.Ok <- function(x) {
     class_ <- class(x)
@@ -263,8 +358,14 @@ is.Ok <- function(x) {
     all(class_ == expected_class)
 }
 
-#' @todo write docs
-#' @todo tests
+#' Is the value a [`Result.Err`] object?
+#'
+#' @param x (`any`)\cr
+#' Object to check.
+#'
+#' @return (`logical(1)`)
+#'
+#' @name is.Err
 #' @export
 is.Err <- function(x) {
     class_ <- class(x)
@@ -333,7 +434,6 @@ then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
 }
 
 #' @todo write docs
-#' @todo test that it applies to Result.Ok and Result.Err
 #' @export
 `%then%` <- function(lhs, rhs) {
     .env <- parent.frame(n = 1)
@@ -354,16 +454,12 @@ then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
 
 #' @todo write docs
 #' @todo test
-#' @todo test, that it can be used with library(include.only=c("Ok", "Err"))
-#'  (It works, but there should be an explicit test case for it)
-#' @todo test that it applies to Result.Ok and Result.Err
 #' @export
 toString.Result <- function(x) {
     x$get_str_repr()
 }
 
 #' @todo write docs
-#' @todo test that it applies to Result.Ok and Result.Err
 #' @export
 format.Result <- function(x) {
     x$get_str_repr()
