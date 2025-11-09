@@ -17,6 +17,7 @@ Suggests:
     roxygen2,
     testthat (>= 3.0.0),
     usethis
-Imports: 
-    R6 (>= 2.6.1)
+Imports:
+    R6 (>= 2.6.1),
+    utils
 Config/testthat/edition: 3

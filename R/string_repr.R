@@ -88,7 +88,7 @@ get_class_value_line_str <- function(value, name = NULL) {
 
     value_line <- format(value)
     if (is.data.frame(value)) {
-        value_line <- capture.output(print(value))
+        value_line <- utils::capture.output(print(value))
     } else if (is.list(value)) {
         value_line <- cflow::pretty_print_list(value)
     }
