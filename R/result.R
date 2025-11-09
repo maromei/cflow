@@ -29,7 +29,6 @@ Result <- R6::R6Class(
     "Result",
 
     public = list(
-
         #' @description
         #' Construct a [`Result`] value.
         #' @param value (`any`).
@@ -226,7 +225,6 @@ Result.Err <- R6::R6Class(
     "Err",
     inherit = Result,
     public = list(
-
         #' @description
         #' Construct a [`Result`] value.
         #' @param value (`any`).\cr
@@ -381,7 +379,28 @@ is.Err <- function(x) {
     all(class_ == expected_class)
 }
 
-#' @todo write docs
+#' Pass a Result value to an unevaluated function call.
+#'
+#' This function implements the core logic to the
+#' \code{\link{\%then\%}} operator.
+#' The main assumption here is that `rhs` is assumed to be a symbolic
+#' function call. Both the \code{\link{\%then\%}} operator and the
+#' [`Result%then()`][`Result`] function, simply [`substitute`] the function
+#' call and pass it to this function for evaluation.
+#'
+#' @param lhs ([`Result(1)`][`Result`]).\cr
+#' The Result object. If it is a [`Result.Ok`] value, it will be passed
+#' as the first argument to `rhs`, while a [`Result.Err`] value will be returned
+#' as is.
+#' @param rhs (`symbol(1)` with `mode(rhs) == "call"`).\cr
+#' Unevaluated function call.
+#' @param .env (`environment(1)`).\cr
+#' The environment to evaluate `rhs` in.
+#'
+#' @return ([`Result(1)`][`Result`]).\cr
+#' The Result of the function call wrapped in a [`Result`] object.
+#' If the function call already returns a result, no further wrapping will
+#' be done.
 then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
     if (!cflow::is.Result(lhs)) {
         stop(sprintf("'%s' is not a 'cflow::Result' object.", toString(lhs)))
@@ -433,7 +452,41 @@ then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
     cflow::Ok(evaluated_call)
 }
 
-#' @todo write docs
+#' Pass a wrapped Result value to a function call or return the Err as is.
+#'
+#' @param lhs ([`Result(1)`][`Result`]).
+#' @param rhs (`expression`)\cr
+#' An expression where the wrapped [`Ok`] [`Result`] value will be
+#' passed as the first argument to the expression.
+#'
+#' @return ([`Result`]).\cr
+#' The evaluated `rhs` call wrapped in a `Result` object.
+#' If `rhs(...)` returns a [`Result`] itself, it will not be
+#' wrapped in another `Ok()` call. [`Results`][`Result`] will not
+#' be nested. An [`Err`] [`Result`] will just be returned as is.
+#'
+#' @examples
+#'
+#' f <- function(x, y, z) c(x, y, z)
+#'
+#' Ok(1) %then% f(2, 3)
+#' # Output: Ok(c(1, 2, 3))
+#'
+#' Err("Some Error Message") %then% f(2, 3)
+#' # Output: Err("Some Error Message")
+#'
+#' Ok(2) %then% f(x = 1, 3)
+#' # Output: Ok(c(1, 2, 3))
+#'
+#' f_err <- function(x) Err(x)
+#' Ok(1) %then% f_err()
+#' # Output: Err(1)
+#'
+#' f_ok <- function(x) Ok(x)
+#' Ok(1) %then% f_ok()
+#' # Output: Ok(1)
+#'
+#' @name %then%
 #' @export
 `%then%` <- function(lhs, rhs) {
     .env <- parent.frame(n = 1)
@@ -441,25 +494,57 @@ then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
     cflow:::then_with_symbols(lhs, rhs, .env)
 }
 
-#' @todo write docs
-#' @todo tests
-#' @todo test that it applies to Result.Ok and Result.Err
+#' Compare [`Result`] values for equality
+#'
+#' Will throw an error if either `lhs` or `rhs` is not a [`Result`] type.
+#' See [`is.Result()`].
+#'
+#' @param lhs ([`Result`]).
+#' @param rhs ([`Result`]).
+#' @return (`logical(1)`)
+#'
 #' @export
 `==.Result` <- function(lhs, rhs) {
+    if (!cflow::is.Result(lhs) || !cflow::is.Result(rhs)) {
+        lhs_class_str <- paste(class(lhs), collapse = ", ")
+        rhs_class_str <- paste(class(rhs), collapse = ", ")
+        sprintf(
+            "Cannot compare class '%s' and '%s'",
+            lhs_class_str,
+            rhs_class_str
+        ) |>
+            stop()
+    }
+
     lhs_str <- lhs$get_str_repr()
     rhs_str <- rhs$get_str_repr()
+
+    if (length(lhs_str) != length(rhs_str)) {
+        return(FALSE)
+    }
 
     all(lhs_str == rhs_str)
 }
 
-#' @todo write docs
-#' @todo test
+#' Simple [`toString`] method for [`Result`]
+#'
+#' See [`Result.Ok$get_str_repr`][`Result.Ok`] and
+#' [`Result.Err$get_str_repr`][`Result.Err`].
+#'
+#' @return (`character(1)`).
+#'
 #' @export
 toString.Result <- function(x) {
     x$get_str_repr()
 }
 
-#' @todo write docs
+#' Simple [`format`] method for [`Result`]
+#'
+#' See [`Result.Ok$get_str_repr`][`Result.Ok`] and
+#' [`Result.Err$get_str_repr`][`Result.Err`].
+#'
+#' @return (`character(1)`).
+#'
 #' @export
 format.Result <- function(x) {
     x$get_str_repr()
