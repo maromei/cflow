@@ -501,7 +501,7 @@ then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
 #'
 #' @param lhs ([`Result`]).
 #' @param rhs ([`Result`]).
-#' @return (`logical(1)`)
+#' @return (`logical(1)`).
 #'
 #' @export
 `==.Result` <- function(lhs, rhs) {
@@ -524,6 +524,17 @@ then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
     }
 
     all(lhs_str == rhs_str)
+}
+
+#' Compare [`Result`] values for inequality
+#'
+#' @param lhs ([`Result`]).
+#' @param rhs ([`Result`]).
+#' @return (`logical(1)`).
+#'
+#' @export
+`!=.Result` <- function(lhs, rhs) {
+    !(lhs == rhs)
 }
 
 #' Simple [`toString`] method for [`Result`]
