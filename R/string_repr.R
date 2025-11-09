@@ -10,7 +10,7 @@
 #'
 #' list_ <- list(a = "a", b = c(1, 2, 3))
 #'
-#' pretty_print(list_) |> print()
+#' pretty_print_list(list_) |> print()
 #' # Output:
 #' # [1] "a (character): a"
 #' # [2] "b (numeric): [\n    1\n    2\n    3\n]"
