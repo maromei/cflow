@@ -2,7 +2,7 @@ Package: cflow
 Title: Control Flow Functions for R
 Version: 0.0.1
 Authors@R:
-    person("maro", "mei", , "maromei@proton.me", role = c("aut", "cre"))
+    person("maro", "mei", email = "maromei@proton.me", role = c("aut", "cre"))
 Description: Provides many useful functions to allow for a more strict control flow in R.
 License: GPL (>= 3)
 Encoding: UTF-8
