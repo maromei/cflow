@@ -542,6 +542,7 @@ then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
 #' See [`Result.Ok$get_str_repr`][`Result.Ok`] and
 #' [`Result.Err$get_str_repr`][`Result.Err`].
 #'
+#' @param x (`any`).
 #' @return (`character(1)`).
 #'
 #' @export
@@ -554,6 +555,7 @@ toString.Result <- function(x) {
 #' See [`Result.Ok$get_str_repr`][`Result.Ok`] and
 #' [`Result.Err$get_str_repr`][`Result.Err`].
 #'
+#' @param x (`any`).
 #' @return (`character(1)`).
 #'
 #' @export
