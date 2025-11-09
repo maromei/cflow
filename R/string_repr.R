@@ -28,7 +28,7 @@
 #'
 #' @export
 pretty_print_list <- function(x) {
-    value_strs <- lapply(x, cflow:::get_class_value_line_str)
+    value_strs <- lapply(x, cflow::get_class_value_line_str)
 
     names_ <- names(x)
     is_not_an_empty_name <- names_ != ""
@@ -90,7 +90,7 @@ get_class_value_line_str <- function(value, name = NULL) {
     if (is.data.frame(value)) {
         value_line <- capture.output(print(value))
     } else if (is.list(value)) {
-        value_line <- cflow:::pretty_print_list(value)
+        value_line <- cflow::pretty_print_list(value)
     }
     value_line <- paste(value_line, collapse = "\n")
 

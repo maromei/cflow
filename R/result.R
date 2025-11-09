@@ -184,7 +184,7 @@ Result.Ok <- R6::R6Class(
         #'
         #' @return (`character(1)`).
         get_str_repr = function() {
-            value_line <- cflow:::get_class_value_line_str(self$get(), "Value")
+            value_line <- cflow::get_class_value_line_str(self$get(), "Value")
             sprintf("Result: Ok\n%s\n", value_line)
         }
     )
@@ -263,11 +263,11 @@ Result.Err <- R6::R6Class(
         #'
         #' @return (`character(1)`).
         get_str_repr = function() {
-            value_line <- cflow:::get_class_value_line_str(
+            value_line <- cflow::get_class_value_line_str(
                 self$get(),
                 name = "Message"
             )
-            error_type_line <- cflow:::get_class_value_line_str(
+            error_type_line <- cflow::get_class_value_line_str(
                 self$error_type,
                 name = "Error Type"
             )
