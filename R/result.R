@@ -543,10 +543,12 @@ then_with_symbols <- function(lhs, rhs, .env = parent.frame()) {
 #' [`Result.Err$get_str_repr`][`Result.Err`].
 #'
 #' @param x (`any`).
+#' @param ... (`any`).\cr
+#' Unused additional parameters inherited from the [`toString()`] generic.
 #' @return (`character(1)`).
 #'
 #' @export
-toString.Result <- function(x) {
+toString.Result <- function(x, ...) {
     x$get_str_repr()
 }
 
@@ -556,9 +558,11 @@ toString.Result <- function(x) {
 #' [`Result.Err$get_str_repr`][`Result.Err`].
 #'
 #' @param x (`any`).
+#' @param ... (`any`).\cr
+#' Unused additional parameters inherited from the [`format()`] generic.
 #' @return (`character(1)`).
 #'
 #' @export
-format.Result <- function(x) {
+format.Result <- function(x, ...) {
     x$get_str_repr()
 }
