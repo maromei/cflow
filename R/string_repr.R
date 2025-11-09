@@ -25,6 +25,8 @@
 #' #     2
 #' #     3
 #' # ]
+#'
+#' @export
 pretty_print_list <- function(x) {
     value_strs <- lapply(x, cflow:::get_class_value_line_str)
 
@@ -72,6 +74,8 @@ pretty_print_list <- function(x) {
 #' #         3
 #' #     ]
 #' # ]
+#'
+#' @export
 get_class_value_line_str <- function(value, name = NULL) {
     indent <- function(lines) {
         indented_lines <-
